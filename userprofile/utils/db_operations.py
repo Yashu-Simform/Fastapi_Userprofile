@@ -1,4 +1,4 @@
-from models import Base
+from userprofile.models.models import Base
 from sqlalchemy import Engine
 from fastapi import Depends
 from typing import Annotated
