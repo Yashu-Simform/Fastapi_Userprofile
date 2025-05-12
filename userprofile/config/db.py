@@ -40,7 +40,7 @@ class DBConnection(metaclass=DBConnectionMetaClass):
         if not (hasattr(self, "engine") and isinstance(self.engine, Engine)):
             if not p_db_url:
                 p_db_url = str(self.get_db_connection_url())
-            self.engine = create_engine(p_db_url)
+            self.engine = create_engine(p_db_url, echo=True)
             print('Engine object is now available. Access it using "instance.engine".')
         else:
             print('Engine object is already created.')
