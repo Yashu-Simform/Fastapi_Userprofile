@@ -1,0 +1,24 @@
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+from typing import Dict, Any
+from ..models.user_models import UserBase
+from fastapi import HTTPException, status
+
+def user_registration(session: Session, req_data: Dict[str, Any]):
+    user = UserBase(**req_data)
+    session.add(user)
+    session.commit()
+
+def user_profile(session: Session, user: Dict):
+    user = session.get(UserBase, int(user["id"]))
+    return user
+
+def get_user(session: Session, email: str= None, id: int = None) -> UserBase:
+    if not email and not id:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="No unique identification provided to get user.")
+    sql = select(UserBase).where((UserBase.email == email) if email else (UserBase.id == id))
+    user = session.scalar(sql)
+    if not user:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='User not found!')
+    
+    return user

@@ -1,4 +1,4 @@
-from ..models.models import Base
+from ..models.user_models import Base
 from sqlalchemy import Engine
 
 def create_db_tables(engine: Engine):
