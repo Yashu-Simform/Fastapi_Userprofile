@@ -11,4 +11,4 @@ router = APIRouter(prefix='/admin', tags=['admin'])
 
 @router.post('/create-admin-user', dependencies=[Depends(is_admin_user)])
 def create_admin_user(session: Annotated[Session, Depends(get_db)], user: Annotated[UserRegistrationSchema, Form()]):
-    return admin_services.create_admin_user(session, user)
+    return admin_services.create_admin_user(session, user) 
