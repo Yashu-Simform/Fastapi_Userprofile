@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from .repositories import user_repo
 from jwt.exceptions import InvalidTokenError
 from .schemas.user_schemas import AuthenticatedUser
+from sqlalchemy.orm import Session
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")  
 
@@ -22,14 +23,14 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
     user_repo.get_user(email)
     return email
 
-def get_authenticated_user(token: Annotated[str, Depends(oauth2_scheme)]) -> AuthenticatedUser:
+def get_authenticated_user(session: Annotated[Session, Depends(get_db)],token: Annotated[str, Depends(oauth2_scheme)]) -> AuthenticatedUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    try:
+    try: 
         payload = decode_jwt_token(token)
         user_id = payload.get('id')
         if not user_id:
@@ -37,6 +38,10 @@ def get_authenticated_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Aut
     except InvalidTokenError:
         raise credentials_exception
     
-    rawuser = user_repo.get_user(id=user_id)
-    user = AuthenticatedUser(id=rawuser.id, email=rawuser.email)
+    rawuser = user_repo.get_user(session, id=user_id)
+    user = AuthenticatedUser(id=rawuser.id, email=rawuser.email, is_admin=rawuser.is_admin)
     return user
+
+def is_admin_user(user: Annotated[AuthenticatedUser, Depends(get_authenticated_user)]):
+    if not user.is_admin:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not an Admin user!")

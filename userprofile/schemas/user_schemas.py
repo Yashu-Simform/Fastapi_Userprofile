@@ -1,25 +1,67 @@
-from pydantic import BaseModel, EmailStr
-from typing import Annotated
+from pydantic import BaseModel, EmailStr, SecretStr, field_validator, Field
+from typing import Annotated, ClassVar
+from ..core import validators
+from ..core.utils import get_password_hash, validate_and_hash
+
 
 class UserBaseSchema(BaseModel):
     email: EmailStr
     password: str
 
-class UserRegistrationSchema(UserBaseSchema):
+
+# Request Schemas
+class UserBaseReqSchema(UserBaseSchema):
+    @field_validator('password', check_fields=False)
+    @classmethod
+    def validate_password(cls, value: str):
+        # return validate_and_hash(value, validators.validate_password)
+        return validators.validate_password(value)
+    
+class UserProfileReqSchema(UserBaseReqSchema):
+    fname: str | None = None
+    lname: str | None = None
+    mobile_number: str | None = None
+    
+    @field_validator('fname')
+    @classmethod
+    def validate_fname(cls, value: str):
+        return validators.validate_fname(value)
+    
+    @field_validator('lname')
+    @classmethod
+    def validate_lname(cls, value: str):
+        return validators.validate_lname(value)
+
+    @field_validator('mobile_number')
+    @classmethod
+    def validate_mobile_number(cls, value: str):
+        return validators.validate_mobile_number(value)
+
+class UserRegistrationSchema(UserProfileReqSchema):
+    pass
+
+class UserLoginDocsSchema(UserBaseReqSchema):
+    username: EmailStr
+    email: ClassVar[str] = Field(default= 'user@example.com', exclude=True)
+
+class UserLoginSchema(UserBaseReqSchema):
+    pass
+
+class UserProfileUpdateSchema(UserProfileReqSchema):
+    email: EmailStr | None = None
+    password: str | None = None
+
+
+# Response Schema
+class UserProfileResSchema(UserBaseSchema):
     fname: str | None = None
     lname: str | None = None
     mobile_number: str | None = None
 
-class UserProfileViewSchema(UserRegistrationSchema):
-    pass
+class UserProfileViewSchema(UserProfileResSchema):
+    password: SecretStr
 
-class UserLoginSchema(UserBaseSchema):
-    pass
-
-class UserLoginDocsSchema(BaseModel):
-    username: EmailStr
-    password: str
-
-class AuthenticatedUser:
+class AuthenticatedUser(BaseModel):
     id: int
     email: EmailStr
+    is_admin: bool

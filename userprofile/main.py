@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from .config.db import DBConnection
 from contextlib import asynccontextmanager
 from .config.db_init import create_db_tables
-from .routes import user_profile_routes
+from .routes import user_profile_routes, admin_routes
 
 mydb = DBConnection()
 
@@ -19,4 +19,5 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+app.include_router(admin_routes.router)
 app.include_router(user_profile_routes.router)

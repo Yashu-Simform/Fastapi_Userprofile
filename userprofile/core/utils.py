@@ -3,6 +3,7 @@ import pytz
 import jwt
 from passlib.context import CryptContext
 from dotenv import load_dotenv, get_key
+from typing import Callable
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -10,10 +11,10 @@ def datetime_now(tz_name = 'Asia/Kolkata'):
     tz = pytz.timezone(tz_name)
     return datetime.now(tz)
 
-def get_password_hash(password):
+def get_password_hash(password: str):
     return pwd_context.hash(password)
 
-def verify_password(plain_password, hashed_password) -> bool:
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_jwt_token(payload: dict) -> str:
@@ -31,8 +32,12 @@ def create_jwt_token(payload: dict) -> str:
     return token
 
 def decode_jwt_token(token: str) -> dict:
-    load_dotenv('../.env')
-    SECRET_KEY = get_key('../.env', 'SECRET_KEY')
-    JWT_HASHING_ALGORITHM = get_key('../.env', 'JWT_HASHING_ALGORITHM')
+    load_dotenv()
+    SECRET_KEY = get_key('.env', 'SECRET_KEY')
+    JWT_HASHING_ALGORITHM = get_key('.env', 'JWT_HASHING_ALGORITHM')
     payload = jwt.decode(token, SECRET_KEY, JWT_HASHING_ALGORITHM)
     return payload
+
+def validate_and_hash(value, validator: Callable) -> str:
+    validated_value = validator(value)
+    return pwd_context.hash(validated_value)

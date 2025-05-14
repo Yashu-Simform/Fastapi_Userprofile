@@ -3,13 +3,15 @@ from sqlalchemy import select
 from typing import Dict, Any
 from ..models.user_models import UserBase
 from fastapi import HTTPException, status
+from ..core.utils import get_password_hash
 
 def user_registration(session: Session, req_data: Dict[str, Any]):
+    req_data['password'] = get_password_hash(req_data['password'])
     user = UserBase(**req_data)
     session.add(user)
     session.commit()
 
-def user_profile(session: Session, user: Dict):
+def user_profile(session: Session, user: Dict) -> UserBase:
     user = session.get(UserBase, int(user["id"]))
     return user
 
@@ -22,3 +24,24 @@ def get_user(session: Session, email: str= None, id: int = None) -> UserBase:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail='User not found!')
     
     return user
+
+def user_update_profile(session: Session, id: int, updated_data: dict):
+    user = session.get(UserBase, id)
+
+    if not user:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='User not found!')
+    
+    for k, v in updated_data.items():
+        if k and v:
+            setattr(user, k, v)
+
+    session.commit()
+
+def delete_user_account(session: Session, id: int):
+    user = session.get(UserBase, id)
+
+    if not user:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='User not found!')
+    
+    user.deleted = True
+    session.commit()
