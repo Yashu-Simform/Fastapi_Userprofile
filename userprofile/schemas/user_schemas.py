@@ -65,3 +65,6 @@ class AuthenticatedUser(BaseModel):
     id: int
     email: EmailStr
     is_admin: bool
+
+class UserAccountDeleteResSchema(UserProfileResSchema):
+    password: ClassVar[str]

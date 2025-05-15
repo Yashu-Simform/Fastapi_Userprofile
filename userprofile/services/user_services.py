@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from ..schemas.user_schemas import UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserProfileUpdateSchema
+from ..schemas.user_schemas import UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserProfileUpdateSchema, UserAccountDeleteResSchema
 from ..schemas.auth_schemas import Token
 from ..repositories import user_repo
 from ..core.utils import get_password_hash, verify_password, create_jwt_token
@@ -33,5 +33,6 @@ def user_profile_update(session: Session, user: AuthenticatedUser, updated_data:
 
     return user_repo.user_update_profile(session, user.id, updated_fields_only)
 
-def delete_user_account(session: Session, id: int):
-    return user_repo.delete_user_account(session, id)
+def delete_user_account(session: Session, id: int) -> UserAccountDeleteResSchema:
+    user_acc_deleted = user_repo.delete_user_account(session, id)
+    return user_acc_deleted

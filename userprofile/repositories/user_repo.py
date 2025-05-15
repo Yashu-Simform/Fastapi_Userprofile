@@ -2,8 +2,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from typing import Dict, Any
 from ..models.user_models import UserBase
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 from ..core.utils import get_password_hash
+from ..core.workers import send_email
 
 def user_registration(session: Session, req_data: Dict[str, Any]):
     req_data['password'] = get_password_hash(req_data['password'])
@@ -45,3 +46,5 @@ def delete_user_account(session: Session, id: int):
     
     user.deleted = True
     session.commit()
+
+    return user

@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, status, Form
+from fastapi import APIRouter, Depends, status, Form, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import Annotated
 from ..dependencies import get_db, get_authenticated_user, is_admin_user
 from ..schemas.user_schemas import UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserLoginDocsSchema, UserProfileUpdateSchema
 from ..schemas.auth_schemas import Token
 from ..services import user_services
+from ..core.workers import send_email, celery
+from pydantic import EmailStr
 
 router = APIRouter(prefix='/user', tags=['users'])
 
@@ -28,4 +30,9 @@ def user_profile_update(session: Annotated[Session, Depends(get_db)], user: Anno
 
 @router.delete('/delete-account', status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(is_admin_user)])
 def delete_user_account(session: Annotated[Session, Depends(get_db)], id: int):
-    return user_services.delete_user_account(session, id)
+    user_acc_deleted = user_services.delete_user_account(session, id)
+    
+    subject = 'Your account has been deleted!'
+    recipients = [user_acc_deleted.email]
+    body = """<p>You account has been Deleted!</p>"""
+    send_email.delay(subject, recipients, body)
