@@ -9,6 +9,7 @@ from typing import Optional
 import email_validator
 from string import punctuation
 from ..core import validators
+from ..core.utils import validate_and_hash
 
 class Base(DeclarativeBase):
     pass
@@ -64,7 +65,7 @@ class UserBase(Base, BaseModel):
 
     @validates('password')
     def validate_password(self, key, value: str):
-        return validators.validate_password(value)
+        return validate_and_hash(value, validators.validate_password)
     
     @validates('mobile_number')
     def validate_mobile_number(self, key, value: str):

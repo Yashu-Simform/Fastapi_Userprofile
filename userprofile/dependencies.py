@@ -2,11 +2,13 @@ from .config.db import DBConnection
 from .core.utils import decode_jwt_token
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Form
 from .repositories import user_repo
 from jwt.exceptions import InvalidTokenError
 from .schemas.user_schemas import AuthenticatedUser
 from sqlalchemy.orm import Session
+from pydantic import EmailStr
+from .models.user_models import UserBase
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")  
 
@@ -45,3 +47,7 @@ def get_authenticated_user(session: Annotated[Session, Depends(get_db)],token: A
 def is_admin_user(user: Annotated[AuthenticatedUser, Depends(get_authenticated_user)]):
     if not user.is_admin:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not an Admin user!")
+    
+def get_user_email(session: Annotated[Session, Depends(get_db)], email: Annotated[EmailStr, Form()]):
+    user:UserBase = user_repo.get_user(session, email=email)
+    return user.email

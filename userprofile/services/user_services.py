@@ -1,9 +1,12 @@
 from sqlalchemy.orm import Session
-from ..schemas.user_schemas import UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserProfileUpdateSchema, UserAccountDeleteResSchema
+from ..schemas.user_schemas import UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserProfileUpdateSchema, UserAccountDeleteResSchema, UserPasswordResetReqSchema
 from ..schemas.auth_schemas import Token
 from ..repositories import user_repo
 from ..core.utils import get_password_hash, verify_password, create_jwt_token
 from fastapi import HTTPException, status
+from pydantic import EmailStr
+from ..models.user_models import UserBase
+from ..core.workers import send_email
 
 def user_registration(session: Session, user: UserRegistrationSchema):
     req_data = user.model_dump()
@@ -31,8 +34,20 @@ def user_profile_update(session: Session, user: AuthenticatedUser, updated_data:
 
     updated_fields_only = {k:v for k, v in updated_data_dict.items() if v}
 
-    return user_repo.user_update_profile(session, user.id, updated_fields_only)
+    return user_repo.user_update_profile(session, updated_fields_only, id=user.id)
 
 def delete_user_account(session: Session, id: int) -> UserAccountDeleteResSchema:
     user_acc_deleted = user_repo.delete_user_account(session, id)
     return user_acc_deleted
+
+def user_forgot_password(email: str):
+    pass_reset_url = 'http://127.0.0.1:8000/docs#/users/password_reset_user_reset_password_post'
+    subject = 'Account Recovery!'
+    recipients = [email]
+    body = f'<p>Go to this url to reset password: <br><a href="{pass_reset_url}">Reset Password</a></p>'
+    send_email.delay(subject, recipients, body)
+
+def user_reset_password(session: Session, req_data: UserPasswordResetReqSchema):
+    data = req_data.model_dump()
+    email = data.pop('email')
+    user_repo.user_update_profile(session, data, email=email)

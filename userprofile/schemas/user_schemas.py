@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, SecretStr, field_validator, Field
+from pydantic import BaseModel, EmailStr, SecretStr, field_validator, Field, model_validator
 from typing import Annotated, ClassVar
 from ..core import validators
 from ..core.utils import get_password_hash, validate_and_hash
@@ -50,6 +50,16 @@ class UserLoginSchema(UserBaseReqSchema):
 class UserProfileUpdateSchema(UserProfileReqSchema):
     email: EmailStr | None = None
     password: str | None = None
+
+class UserPasswordResetReqSchema(UserBaseReqSchema):
+    confirm_password: str
+
+    @model_validator(mode='after')
+    def validate_passwords(self):
+        if self.password != self.confirm_password:
+            return ValueError('Passwords do not match.')
+        
+        return self
 
 
 # Response Schema

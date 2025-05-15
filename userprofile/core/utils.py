@@ -4,6 +4,7 @@ import jwt
 from passlib.context import CryptContext
 from dotenv import load_dotenv, get_key
 from typing import Callable
+import requests
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -41,3 +42,11 @@ def decode_jwt_token(token: str) -> dict:
 def validate_and_hash(value, validator: Callable) -> str:
     validated_value = validator(value)
     return pwd_context.hash(validated_value)
+
+def get_random_password():
+    api_url = 'https://password.ninja/api/password'
+    response = requests.get(api_url)
+    if response.status_code == requests.codes.ok:
+        print(response.text)
+    else:
+        print("Error:", response.status_code, response.text)

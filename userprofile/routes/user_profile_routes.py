@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, status, Form, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import Annotated
-from ..dependencies import get_db, get_authenticated_user, is_admin_user
-from ..schemas.user_schemas import UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserLoginDocsSchema, UserProfileUpdateSchema
+from ..dependencies import get_db, get_authenticated_user, is_admin_user, get_user_email
+from ..schemas.user_schemas import UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserLoginDocsSchema, UserProfileUpdateSchema, UserPasswordResetReqSchema
 from ..schemas.auth_schemas import Token
 from ..services import user_services
 from ..core.workers import send_email, celery
 from pydantic import EmailStr
+import requests
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix='/user', tags=['users'])
 
@@ -36,3 +38,12 @@ def delete_user_account(session: Annotated[Session, Depends(get_db)], id: int):
     recipients = [user_acc_deleted.email]
     body = """<p>You account has been Deleted!</p>"""
     send_email.delay(subject, recipients, body)
+
+@router.patch('/account-recovery', status_code=status.HTTP_200_OK)
+def user_forgot_password(email: Annotated[str, Depends(get_user_email, use_cache=True)]):
+    user_services.user_forgot_password(email)
+
+@router.post('/reset-password', name='password_reset')
+def user_reset_password(session: Annotated[Session, Depends(get_db)], req_data: Annotated[UserPasswordResetReqSchema, Form()]):
+    user_services.user_reset_password(session, req_data)
+    return JSONResponse(content={'status': 'success', 'message': 'Password Reset Successfully!'})
