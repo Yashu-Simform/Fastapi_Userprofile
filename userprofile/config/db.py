@@ -1,8 +1,8 @@
 from sqlalchemy.engine import create_engine, Engine
-from dotenv import load_dotenv, get_key
 from pydantic_core import MultiHostUrl
 from pydantic import PostgresDsn
 from sqlalchemy.orm import Session
+import os
 
 class DBConnectionMetaClass(type):
     """
@@ -19,12 +19,11 @@ class DBConnectionMetaClass(type):
 
 class DBConnection(metaclass=DBConnectionMetaClass):
     def __init__(self):
-        load_dotenv()
-        self.db_port = int(get_key('.env', 'DB_PORT'))
-        self.db_username = get_key('.env', 'DB_USER')
-        self.db_password = get_key('.env', 'DB_PASSWORD')
-        self.db_host = get_key('.env', 'DB_HOST')
-        self.db_path = get_key('.env', 'DB_NAME')
+        self.db_port = int(os.getenv('DB_PORT'))
+        self.db_username = os.getenv('DB_USER')
+        self.db_password = os.getenv('DB_PASSWORD')
+        self.db_host = os.getenv('DB_HOST')
+        self.db_path = os.getenv('DB_NAME')
 
     def get_db_connection_url(self) -> PostgresDsn:
         return MultiHostUrl.build(

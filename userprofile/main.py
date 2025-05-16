@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Body
 from .config.db import DBConnection
 from contextlib import asynccontextmanager
 from .config.db_init import create_db_tables
-from .routes import user_profile_routes, admin_routes
+from .routes import user_profile_routes, admin_routes, static_file_routes, template_routes
+from fastapi.staticfiles import StaticFiles
 
 mydb = DBConnection()
 
@@ -16,8 +17,13 @@ async def lifespan(p_app: FastAPI):
 
 app = FastAPI(
     title='User Profile Application',
-    lifespan=lifespan
+    lifespan=lifespan,
+    # root_path=''
 )
 
 app.include_router(admin_routes.router)
 app.include_router(user_profile_routes.router)
+app.include_router(template_routes.router)
+# app.mount('/templates', StaticFiles(directory='userprofile/templates', html=True), name='templates')
+app.mount('/images', StaticFiles(directory='userprofile/static/images'), name='images')
+app.mount('/logs', StaticFiles(directory='userprofile/logs/'), name='logs')

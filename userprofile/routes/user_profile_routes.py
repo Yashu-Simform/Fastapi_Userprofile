@@ -8,7 +8,7 @@ from ..services import user_services
 from ..core.workers import send_email, celery
 from pydantic import EmailStr
 import requests
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 
 router = APIRouter(prefix='/user', tags=['users'])
 
@@ -47,3 +47,7 @@ def user_forgot_password(email: Annotated[str, Depends(get_user_email, use_cache
 def user_reset_password(session: Annotated[Session, Depends(get_db)], req_data: Annotated[UserPasswordResetReqSchema, Form()]):
     user_services.user_reset_password(session, req_data)
     return JSONResponse(content={'status': 'success', 'message': 'Password Reset Successfully!'})
+
+@router.get('/download-car-img')
+def download_car_image():
+    return FileResponse('userprofile/static/car.jpg', media_type='application/octet-stream',filename='car.jpg')

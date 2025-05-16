@@ -1,0 +1,48 @@
+services:
+    redis:
+        image: redis:7
+
+    postgresql:
+        image : postgres:17
+        container_name: userprofile_db
+        restart: always
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=hello123inoPG
+            - POSTGRES_DB=userprofiledb
+        # volumes:
+        #     - pgdata:/var/lib/postgresql/data
+
+    # pgadmin:
+    #     image : dpage/pgadmin4
+    #     restart: always
+    #     ports:
+    #         - "8081:80"  # host:container (access in browser via localhost:8080)
+    #     depends_on:
+    #         - postgresql
+    #     environment:
+    #         - PGADMIN_DEFAULT_EMAIL=captain.rogers.q@gmail.com
+    #         - PGADMIN_DEFAULT_PASSWORD=yashu
+
+    app:
+        build: .
+        command: uvicorn userprofile.main:app --host 0.0.0.0 --port 8001 --reload
+        ports:
+            - "8001:8001"
+        env_file:
+            - .env
+        depends_on:
+            - redis
+            - postgresql
+
+    worker:
+        build: .
+        command: celery -A userprofile.core.workers.celery worker --loglevel=info
+        depends_on:
+            - redis
+            - app
+        environment:
+            - CELERY_BROKER_URL=redis://redis:6379/0
+            - CELERY_RESULT_BACKEND=redis://redis:6379/0

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import pytz
 import jwt
 from passlib.context import CryptContext
-from dotenv import load_dotenv, get_key
+import os
 from typing import Callable
 import requests
 
@@ -19,10 +19,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 def create_jwt_token(payload: dict) -> str:
-    load_dotenv()
-    SECRET_KEY = get_key('.env', 'SECRET_KEY')
-    JWT_HASHING_ALGORITHM = get_key('.env', 'JWT_HASHING_ALGORITHM')
-    ACCESS_TOKEN_EXPIRE_MINUTES = get_key('.env', 'ACCESS_TOKEN_EXPIRE_MINUTES')
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    JWT_HASHING_ALGORITHM = os.getenv('JWT_HASHING_ALGORITHM')
+    ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES')
     
     token_exp = datetime_now() + timedelta(minutes=float(ACCESS_TOKEN_EXPIRE_MINUTES))
 
@@ -33,9 +32,8 @@ def create_jwt_token(payload: dict) -> str:
     return token
 
 def decode_jwt_token(token: str) -> dict:
-    load_dotenv()
-    SECRET_KEY = get_key('.env', 'SECRET_KEY')
-    JWT_HASHING_ALGORITHM = get_key('.env', 'JWT_HASHING_ALGORITHM')
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    JWT_HASHING_ALGORITHM = os.getenv('JWT_HASHING_ALGORITHM')
     payload = jwt.decode(token, SECRET_KEY, JWT_HASHING_ALGORITHM)
     return payload
 
