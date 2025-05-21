@@ -9,8 +9,12 @@ from .schemas.user_schemas import AuthenticatedUser
 from sqlalchemy.orm import Session
 from pydantic import EmailStr
 from .models.user_models import UserBase
+from fastapi.security import SecurityScopes
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")  
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="user/login",
+    scopes={"user-r": "Read permission for user.", 'user-w': "Write permission for user."}
+    )  
 
 def get_db():
     mydb = DBConnection()
@@ -25,7 +29,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
     user_repo.get_user(email)
     return email
 
-def get_authenticated_user(session: Annotated[Session, Depends(get_db)],token: Annotated[str, Depends(oauth2_scheme)]) -> AuthenticatedUser:
+def get_authenticated_user(session: Annotated[Session, Depends(get_db)], security_scopes: SecurityScopes, token: Annotated[str, Depends(oauth2_scheme)]) -> AuthenticatedUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -40,9 +44,34 @@ def get_authenticated_user(session: Annotated[Session, Depends(get_db)],token: A
     except InvalidTokenError:
         raise credentials_exception
     
+    req_scopes = payload.get('scopes', [])
+
+    # Security permission check
+    for scope in security_scopes.scopes:
+        if scope not in req_scopes:
+            raise  HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not enough permissions.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    
     rawuser = user_repo.get_user(session, id=user_id)
     user = AuthenticatedUser(id=rawuser.id, email=rawuser.email, is_admin=rawuser.is_admin)
     return user
+
+def check_permissions(security_scopes: SecurityScopes, token: Annotated[str, Depends(oauth2_scheme)]):
+    payload = decode_jwt_token(token)
+    
+    req_scopes = payload.get('scopes', [])
+
+    # Security permission check
+    for scope in security_scopes.scopes:
+        if scope not in req_scopes:
+            raise  HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not enough permissions.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
 def is_admin_user(user: Annotated[AuthenticatedUser, Depends(get_authenticated_user)]):
     if not user.is_admin:

@@ -3,4 +3,4 @@ from fastapi.staticfiles import StaticFiles
 
 router = APIRouter(prefix='/static')
 
-router.mount('/templates', StaticFiles(directory='userprofile/templates', html=True), name='templates')
+# router.mount('/templates', StaticFiles(directory='.templates/', html=True), name='templates')

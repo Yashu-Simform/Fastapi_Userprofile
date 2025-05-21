@@ -49,6 +49,7 @@ class UserBase(Base, BaseModel):
     fname: Mapped[str] = mapped_column(nullable=True)
     lname: Mapped[str] = mapped_column(nullable=True)
     mobile_number: Mapped[str] = mapped_column(nullable=True)
+    profile_img: Mapped[str] = mapped_column(nullable=True)
     is_admin: Mapped[bool] = mapped_column(nullable=False, default=False)
 
     @validates('email')

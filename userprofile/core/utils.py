@@ -5,6 +5,7 @@ from passlib.context import CryptContext
 import os
 from typing import Callable
 import requests
+from ..schemas.auth_schemas import PayloadSchema
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -18,14 +19,14 @@ def get_password_hash(password: str):
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
-def create_jwt_token(payload: dict) -> str:
+def create_jwt_token(payload: PayloadSchema) -> str:
     SECRET_KEY = os.getenv('SECRET_KEY')
     JWT_HASHING_ALGORITHM = os.getenv('JWT_HASHING_ALGORITHM')
     ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES')
     
     token_exp = datetime_now() + timedelta(minutes=float(ACCESS_TOKEN_EXPIRE_MINUTES))
 
-    payload_with_token_exp = payload.copy()
+    payload_with_token_exp = payload.model_dump()
     payload_with_token_exp.update({'exp': token_exp})
     token = jwt.encode(payload_with_token_exp, SECRET_KEY, JWT_HASHING_ALGORITHM)
 

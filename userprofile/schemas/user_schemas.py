@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, SecretStr, field_validator, Field, model_validator
+from pydantic import BaseModel, EmailStr, SecretStr, field_validator, Field, model_validator, FilePath
 from typing import Annotated, ClassVar
 from ..core import validators
 from ..core.utils import get_password_hash, validate_and_hash
@@ -43,9 +43,10 @@ class UserRegistrationSchema(UserProfileReqSchema):
 class UserLoginDocsSchema(UserBaseReqSchema):
     username: EmailStr
     email: ClassVar[str] = Field(default= 'user@example.com', exclude=True)
+    scope: str = ''
 
 class UserLoginSchema(UserBaseReqSchema):
-    pass
+    scopes: str = ''
 
 class UserProfileUpdateSchema(UserProfileReqSchema):
     email: EmailStr | None = None
@@ -60,6 +61,9 @@ class UserPasswordResetReqSchema(UserBaseReqSchema):
             return ValueError('Passwords do not match.')
         
         return self
+
+class UserProfileImgPath(BaseModel):
+    img_path: FilePath
 
 
 # Response Schema

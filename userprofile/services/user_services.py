@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
-from ..schemas.user_schemas import UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserProfileUpdateSchema, UserAccountDeleteResSchema, UserPasswordResetReqSchema
-from ..schemas.auth_schemas import Token
+from ..schemas.user_schemas import UserProfileImgPath, UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserProfileUpdateSchema, UserAccountDeleteResSchema, UserPasswordResetReqSchema
+from ..schemas.auth_schemas import Token, PayloadSchema
 from ..repositories import user_repo
 from ..core.utils import get_password_hash, verify_password, create_jwt_token
-from fastapi import HTTPException, status
-from pydantic import EmailStr
+from fastapi import HTTPException, status, UploadFile
+from pydantic import EmailStr, FilePath
 from ..models.user_models import UserBase
 from ..core.workers import send_email
 
@@ -18,7 +18,7 @@ def user_profile_view(session: Session, user: AuthenticatedUser) -> UserProfileV
 
 def user_login(session: Session, credentials: UserLoginSchema) -> Token:
     user = user_repo.get_user(session, email=credentials.email)
-    payload = {'id': user.id}
+    payload = PayloadSchema(id=user.id, scopes=credentials.scopes.split(sep=' '))
     if verify_password(credentials.password, user.password):
         access_token = create_jwt_token(payload)
         return Token(access_token=access_token, token_type='bearer')
@@ -51,3 +51,17 @@ def user_reset_password(session: Session, req_data: UserPasswordResetReqSchema):
     data = req_data.model_dump()
     email = data.pop('email')
     user_repo.user_update_profile(session, data, email=email)
+
+def user_profile_img_upload(session: Session, img: UploadFile, user: AuthenticatedUser):
+    
+    img_path = f'data/user/profile_images/{img.filename}'
+
+    with open(img_path, 'wb') as f:
+        f.write(img.file.read())
+
+    # Serializing and validating img file path
+    user_profile_img = UserProfileImgPath(img_path=img_path)
+
+    saved_img_path = user_repo.user_profile_img_upload(session, user_profile_img.img_path.as_posix(), user.id)
+
+    print(saved_img_path)

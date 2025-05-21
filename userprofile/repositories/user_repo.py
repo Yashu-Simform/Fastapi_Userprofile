@@ -42,3 +42,11 @@ def delete_user_account(session: Session, id: int):
     session.commit()
 
     return user
+
+def user_profile_img_upload(session: Session, img_path: str, id: int):
+    user = get_user(session, id=id)
+
+    user.profile_img = img_path
+    session.commit()
+
+    return img_path

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Form, BackgroundTasks
+from fastapi import APIRouter, Depends, status, Form, BackgroundTasks, Security, Response, UploadFile
 from sqlalchemy.orm import Session
 from typing import Annotated
 from ..dependencies import get_db, get_authenticated_user, is_admin_user, get_user_email
@@ -17,17 +17,16 @@ def user_registration(session: Annotated[Session, Depends(get_db)], user: Annota
     return user_services.user_registration(session, user)
 
 @router.get('/view-profile')
-def user_profile_view(session: Annotated[Session, Depends(get_db)], user: Annotated[AuthenticatedUser, Depends(get_authenticated_user)]) -> UserProfileViewSchema:
+def user_profile_view(session: Annotated[Session, Depends(get_db)], user: Annotated[AuthenticatedUser, Security(get_authenticated_user, scopes=['user-r'])]) -> UserProfileViewSchema:
     return user_services.user_profile_view(session, user) 
 
 @router.post('/login')
 def user_login(session: Annotated[Session, Depends(get_db, use_cache=False)], credentials: Annotated[UserLoginDocsSchema, Form()]) -> Token:
-    
-    my_credentials = UserLoginSchema(email=credentials.username, password=credentials.password)
+    my_credentials = UserLoginSchema(email=credentials.username, password=credentials.password, scopes=credentials.scope)
     return user_services.user_login(session, my_credentials)
 
 @router.patch('/update-profile', status_code=status.HTTP_200_OK)
-def user_profile_update(session: Annotated[Session, Depends(get_db)], user: Annotated[AuthenticatedUser, Depends(get_authenticated_user)], updated_data: Annotated[UserProfileUpdateSchema, Form()]):
+def user_profile_update(session: Annotated[Session, Depends(get_db)], user: Annotated[AuthenticatedUser, Security(get_authenticated_user, scopes=['user-r', 'user-w'])], updated_data: Annotated[UserProfileUpdateSchema, Form()]):
     return user_services.user_profile_update(session, user, updated_data)
 
 @router.delete('/delete-account', status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(is_admin_user)])
@@ -51,3 +50,8 @@ def user_reset_password(session: Annotated[Session, Depends(get_db)], req_data: 
 @router.get('/download-car-img')
 def download_car_image():
     return FileResponse('userprofile/static/car.jpg', media_type='application/octet-stream',filename='car.jpg')
+
+@router.post('/upload/profile-img')
+def upload_records_file(session: Annotated[Session, Depends(get_db)], img: UploadFile, user: Annotated[AuthenticatedUser, Security(get_authenticated_user, scopes=['user-r', 'user-w'])]):
+    user_services.user_profile_img_upload(session, img, user)
+    return JSONResponse(content={"data": f"Flie {img.filename} uploaded successfully!"}, status_code=status.HTTP_200_OK)

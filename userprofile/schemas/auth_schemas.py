@@ -4,5 +4,6 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-class Payload(BaseModel):
+class PayloadSchema(BaseModel):
     id: int
+    scopes: list[str] = []
