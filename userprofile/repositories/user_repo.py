@@ -50,3 +50,10 @@ def user_profile_img_upload(session: Session, img_path: str, id: int):
     session.commit()
 
     return img_path
+
+def get_user_profile_img(session: Session, id: int):
+    user = get_user(session, id=id)
+
+    image_path = user.profile_img
+
+    return image_path

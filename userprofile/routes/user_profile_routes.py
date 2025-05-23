@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status, Form, BackgroundTasks, Security, Response, UploadFile
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import Annotated
 from ..dependencies import get_db, get_authenticated_user, is_admin_user, get_user_email
@@ -52,6 +53,13 @@ def download_car_image():
     return FileResponse('userprofile/static/car.jpg', media_type='application/octet-stream',filename='car.jpg')
 
 @router.post('/upload/profile-img')
-def upload_records_file(session: Annotated[Session, Depends(get_db)], img: UploadFile, user: Annotated[AuthenticatedUser, Security(get_authenticated_user, scopes=['user-r', 'user-w'])]):
+def user_profile_img_upload(session: Annotated[Session, Depends(get_db)], img: UploadFile, user: Annotated[AuthenticatedUser, Security(get_authenticated_user, scopes=['user-r', 'user-w'])]):
     user_services.user_profile_img_upload(session, img, user)
     return JSONResponse(content={"data": f"Flie {img.filename} uploaded successfully!"}, status_code=status.HTTP_200_OK)
+
+@router.get('/get-profile-img')
+def get_user_profile_img(session: Annotated[Session, Depends(get_db)], user: Annotated[AuthenticatedUser, Security(get_authenticated_user, scopes=['user-r'])]):
+    img_path = user_services.get_user_profile_img(session, user)
+    if not img_path:
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"status": "success", "message": "No profile image uploaded!"})
+    return FileResponse(img_path)

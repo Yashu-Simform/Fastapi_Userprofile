@@ -36,13 +36,13 @@ services:
         depends_on:
             - redis
             - postgresql
+            - worker
 
     worker:
         build: .
         command: celery -A userprofile.core.workers.celery worker --loglevel=info
         depends_on:
             - redis
-            - app
         environment:
             - CELERY_BROKER_URL=redis://redis:6379/0
             - CELERY_RESULT_BACKEND=redis://redis:6379/0

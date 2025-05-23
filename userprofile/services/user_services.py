@@ -7,6 +7,7 @@ from fastapi import HTTPException, status, UploadFile
 from pydantic import EmailStr, FilePath
 from ..models.user_models import UserBase
 from ..core.workers import send_email
+import os
 
 def user_registration(session: Session, user: UserRegistrationSchema):
     req_data = user.model_dump()
@@ -65,3 +66,7 @@ def user_profile_img_upload(session: Session, img: UploadFile, user: Authenticat
     saved_img_path = user_repo.user_profile_img_upload(session, user_profile_img.img_path.as_posix(), user.id)
 
     print(saved_img_path)
+
+def get_user_profile_img(session: Session, user: AuthenticatedUser):
+    img_path = user_repo.get_user_profile_img(session, user.id)
+    return img_path
