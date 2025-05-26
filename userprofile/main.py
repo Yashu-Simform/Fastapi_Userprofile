@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Body
+from fastapi import FastAPI, Request, Body, status
 from .config.db import DBConnection
 from contextlib import asynccontextmanager
 from .config.db_init import create_db_tables
@@ -18,12 +18,12 @@ async def lifespan(p_app: FastAPI):
 app = FastAPI(
     title='User Profile Application',
     lifespan=lifespan,
-    # root_path=''
 )
+
+@app.get('/', status_code=status.HTTP_200_OK)
+def root_path():
+    return 'Server is running ...'
 
 app.include_router(admin_routes.router)
 app.include_router(user_profile_routes.router)
 app.include_router(template_routes.router)
-# app.mount('/templates', StaticFiles(directory='userprofile/templates', html=True), name='templates')
-# app.mount('/images', StaticFiles(directory='./static/images'), name='images')
-# app.mount('/logs', StaticFiles(directory='./logs/'), name='logs')

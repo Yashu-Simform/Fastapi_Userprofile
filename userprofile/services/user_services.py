@@ -23,7 +23,7 @@ def user_login(session: Session, credentials: UserLoginSchema) -> Token:
     if verify_password(credentials.password, user.password):
         access_token = create_jwt_token(payload)
         return Token(access_token=access_token, token_type='bearer')
-    
+    print('password not verified')
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

@@ -3,29 +3,26 @@ from pydantic_core import MultiHostUrl
 from pydantic import PostgresDsn
 from sqlalchemy.orm import Session
 import os
-
-class DBConnectionMetaClass(type):
-    """
-    Meta Class: 
-    An implementation of singleton class is carried out here.
-    """
-    _instance = {}
-    def __call__(self, *args, **kwds):
-        if self not in DBConnectionMetaClass._instance:
-            DBConnectionMetaClass._instance[self] = super().__call__(*args, **kwds)
-        
-        return DBConnectionMetaClass._instance[self]
+from .env_init import EnvConfig
+from ..core.metaclasses import SingletonMetaClass
         
 
-class DBConnection(metaclass=DBConnectionMetaClass):
+class DBConnection(metaclass=SingletonMetaClass):
     def __init__(self):
-        self.db_port = int(os.getenv('DB_PORT'))
-        self.db_username = os.getenv('DB_USER')
-        self.db_password = os.getenv('DB_PASSWORD')
-        self.db_host = os.getenv('DB_HOST')
-        self.db_path = os.getenv('DB_NAME')
+        # self.db_port = int(os.getenv('DB_PORT'))
+        # self.db_username = os.getenv('DB_USER')
+        # self.db_password = os.getenv('DB_PASSWORD')
+        # self.db_host = os.getenv('DB_HOST')
+        # self.db_path = os.getenv('DB_NAME')
+        env_config = EnvConfig()
+        self.db_port = int(env_config.get_envvar('DB_PORT', default='5432'))
+        self.db_username = env_config.get_envvar('DB_USER')
+        self.db_password = env_config.get_envvar('DB_PASSWORD')
+        self.db_host = env_config.get_envvar('DB_HOST')
+        self.db_path = env_config.get_envvar('DB_NAME')
 
     def get_db_connection_url(self) -> PostgresDsn:
+        print('------------curr db: ', self.db_path)
         return MultiHostUrl.build(
             scheme="postgresql+psycopg2",
             username=self.db_username,

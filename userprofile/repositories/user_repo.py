@@ -5,12 +5,17 @@ from ..models.user_models import UserBase
 from fastapi import HTTPException, status, BackgroundTasks
 from ..core.utils import get_password_hash
 from ..core.workers import send_email
-
+from sqlalchemy.exc import IntegrityError
+    
 def user_registration(session: Session, req_data: Dict[str, Any]):
     req_data['password'] = get_password_hash(req_data['password'])
     user = UserBase(**req_data)
-    session.add(user)
-    session.commit()
+    try:
+        session.add(user)
+        session.commit()
+    except IntegrityError as e:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=e.__str__())
 
 def get_user(session: Session, email: str= None, id: int = None) -> UserBase:
     if not email and not id:

@@ -14,7 +14,6 @@ class UserBaseReqSchema(UserBaseSchema):
     @field_validator('password', check_fields=False)
     @classmethod
     def validate_password(cls, value: str):
-        # return validate_and_hash(value, validators.validate_password)
         return validators.validate_password(value)
     
 class UserProfileReqSchema(UserBaseReqSchema):
@@ -58,7 +57,7 @@ class UserPasswordResetReqSchema(UserBaseReqSchema):
     @model_validator(mode='after')
     def validate_passwords(self):
         if self.password != self.confirm_password:
-            return ValueError('Passwords do not match.')
+            raise ValueError('Passwords do not match.')
         
         return self
 
