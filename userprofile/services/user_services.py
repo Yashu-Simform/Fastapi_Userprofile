@@ -42,7 +42,7 @@ def delete_user_account(session: Session, id: int) -> UserAccountDeleteResSchema
     return user_acc_deleted
 
 def user_forgot_password(email: str):
-    pass_reset_url = 'http://127.0.0.1:8000/docs#/users/password_reset_user_reset_password_post'
+    pass_reset_url = 'http://127.0.0.1:8000/docs#/users/password_reset_user_reset_password_post' 
     subject = 'Account Recovery!'
     recipients = [email]
     body = f'<p>Go to this url to reset password: <br><a href="{pass_reset_url}">Reset Password</a></p>'
