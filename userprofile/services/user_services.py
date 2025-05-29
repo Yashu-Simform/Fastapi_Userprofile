@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from ..schemas.user_schemas import UserProfileImgPath, UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserProfileUpdateSchema, UserAccountDeleteResSchema, UserPasswordResetReqSchema
+from ..schemas.user_schemas import UserObjResSchema, UserProfileImgPath, UserRegistrationSchema, UserProfileViewSchema, UserLoginSchema, AuthenticatedUser, UserProfileUpdateSchema, UserAccountDeleteResSchema, UserPasswordResetReqSchema
 from ..schemas.auth_schemas import Token, PayloadSchema
 from ..repositories import user_repo
 from ..core.utils import get_password_hash, verify_password, create_jwt_token
@@ -51,7 +51,9 @@ def user_forgot_password(email: str):
 def user_reset_password(session: Session, req_data: UserPasswordResetReqSchema):
     data = req_data.model_dump()
     email = data.pop('email')
-    user_repo.user_update_profile(session, data, email=email)
+    user = user_repo.user_update_profile(session, data, email=email)
+    user_data = UserObjResSchema(**user)
+    return user_data
 
 def user_profile_img_upload(session: Session, img: UploadFile, user: AuthenticatedUser):
     

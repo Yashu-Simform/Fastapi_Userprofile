@@ -74,6 +74,9 @@ class UserProfileResSchema(UserBaseSchema):
 class UserProfileViewSchema(UserProfileResSchema):
     password: SecretStr
 
+class UserObjResSchema(UserProfileResSchema):
+    id: int
+
 class AuthenticatedUser(BaseModel):
     id: int
     email: EmailStr
@@ -81,3 +84,10 @@ class AuthenticatedUser(BaseModel):
 
 class UserAccountDeleteResSchema(UserProfileResSchema):
     password: ClassVar[str]
+
+
+# Callback url schema
+
+class NotifyData(BaseModel):
+    title: str = None
+    user: dict = None

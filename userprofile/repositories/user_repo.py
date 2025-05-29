@@ -39,6 +39,8 @@ def user_update_profile(session: Session, updated_data: dict, id: int | None = N
             setattr(user, k, v)
 
     session.commit()
+    session.refresh(user)
+    return user.model_to_dict()
 
 def delete_user_account(session: Session, id: int):
     user = get_user(session,id=id)

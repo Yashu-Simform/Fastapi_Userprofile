@@ -9,7 +9,7 @@ env_mapping = {
 }
 
 stage_mappeing = {
-    'DEVELOPMENT': '',
+    'DEVELOPMENT': 'DEV',
     'TESTING': 'TEST',
     'PRODUCTION': 'PROD'
 }

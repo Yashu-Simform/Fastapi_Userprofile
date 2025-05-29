@@ -23,12 +23,6 @@ def get_db():
 
     session.close()
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
-    payload = decode_jwt_token(token)
-    email = payload.get('email')
-    user_repo.get_user(email)
-    return email
-
 def get_authenticated_user(session: Annotated[Session, Depends(get_db)], security_scopes: SecurityScopes, token: Annotated[str, Depends(oauth2_scheme)]) -> AuthenticatedUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
