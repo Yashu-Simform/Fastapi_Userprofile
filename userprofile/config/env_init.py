@@ -16,3 +16,5 @@ class EnvConfig:
         prefix = stage_mappeing.get(self.stage, 'DEV')
         value = self.env_config.get(f'{prefix}_{key}', default)
         return value
+    
+env_config = EnvConfig()
